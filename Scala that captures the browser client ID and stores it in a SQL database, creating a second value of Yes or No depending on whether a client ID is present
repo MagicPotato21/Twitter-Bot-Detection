@@ -1,0 +1,24 @@
+import java.sql.{Connection, DriverManager, PreparedStatement}
+
+// Assume that the client ID is stored in a cookie called "clientId"
+val clientId = request.getCookie("clientId")
+
+// Establish a connection to the database
+val conn = DriverManager.getConnection("jdbc:mysql://localhost/mydatabase", "username", "password")
+
+// Use a prepared statement to insert the client ID and "Yes" or "No" value into the database
+val insertStatement = conn.prepareStatement("INSERT INTO clients (client_id, has_client_id) VALUES (?, ?)")
+
+if (clientId == null) {
+  insert Statement.set Null(1, java.sql.Types.VARCHAR)
+  insert Statement.set String(2, "No")
+} else {
+  insert Statement.set String(1, clientId)
+  insert Statement.set String(2, "Yes")
+}
+
+// Execute the insert statement
+insertStatement.execute Update()
+
+// Close the connection to the database
+conn.close()

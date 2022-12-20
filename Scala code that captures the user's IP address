@@ -1,0 +1,17 @@
+import java.sql.{Connection, DriverManager, PreparedStatement}
+
+// Assume that the IP address is stored in a request header called "X-Forwarded-For"
+val ipAddress = request.getHeader("X-Forwarded-For")
+
+// Establish a connection to the database
+val conn = DriverManager.getConnection("jdbc:mysql://localhost/mydatabase", "username", "password")
+
+// Use a prepared statement to insert the IP address into the database
+val insertStatement = conn.prepare Statement("INSERT INTO users (tor_ip_checker) VALUES (?)")
+insertStatement.set String(1, ipAddress)
+
+// Execute the insert statement
+insert Statement.execute Update()
+
+// Close the connection to the database
+conn.close()

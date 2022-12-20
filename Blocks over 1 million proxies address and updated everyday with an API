@@ -1,0 +1,52 @@
+import java.sql.{Connection, DriverManager, ResultSet}
+
+import scala.io.Source
+import scala.util.{Failure, Success, Try}
+
+object IPBlocker {
+  // Replace with your Neutrino API key
+  val API_KEY = "YOUR_API_KEY"
+  val API_URL = "https://neutrinoapi.net/ip-blocklist"
+
+  def checkIP(ip: String): Boolean = {
+    val apiResponse = Source.fromURL(s"$API_URL?ip=$ip&api-key=$API_KEY")
+    val responseBody = apiResponse.getLines().mkString
+    apiResponse.close()
+
+    // Parse the response to check if the IP is on the blocklist
+    Try(responseBody.parseJson.asJsObject.getFields("error")) match {
+      case Success(_) => false
+      case Failure(_) => true
+    }
+  }
+
+  def main(args: Array[String]): Unit = {
+    // Replace with your database connection details
+    val dbUrl = "jdbc:postgresql://localhost:5432/mydatabase"
+    val username = "user"
+    val password = "password"
+
+    // Load the JDBC driver
+    Class.forName("org.postgresql.Driver")
+
+    // Connect to the database
+    val conn: Connection = DriverManager.getConnection(dbUrl, username, password)
+
+    // Query the database for the list of IP addresses
+    val statement = conn.createStatement()
+    val rs: ResultSet = statement.executeQuery("SELECT ip FROM users")
+
+    // Iterate through the result set and check each IP address against the blocklist
+    while (rs.next()) {
+      val ip = rs.getString("ip")
+      if (checkIP(ip)) {
+        println(s"IP address $ip is on the blocklist. Access denied.")
+      } else {
+        println(s"IP address $ip is not on the blocklist. Access allowed.")
+      }
+    }
+
+    // Close the connection to the database
+    conn.close()
+  }
+}

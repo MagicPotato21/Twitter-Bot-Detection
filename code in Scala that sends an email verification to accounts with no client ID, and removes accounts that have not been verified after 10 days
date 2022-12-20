@@ -1,0 +1,47 @@
+import java.sql.{Connection, DriverManager, PreparedStatement, ResultSet}
+import java.util.Properties
+import javax.mail.{Authenticator, PasswordAuthentication, Session}
+import javax.mail.internet.{InternetAddress, MimeMessage}
+
+// Establish a connection to the database
+val conn = DriverManager.getConnection("jdbc:mysql://localhost/mydatabase", "username", "password")
+
+// Retrieve a list of accounts with a "No" value in the "client_id" column
+val select Statement = conn.prepare Statement("SELECT id, email FROM accounts WHERE client_id = 'No'")
+val result Set = selectStatement.execute Query()
+
+// Set up email properties
+val props = new Properties()
+props.put("mail.smtp.host", "smtp.example.com")
+props.put("mail.smtp.port", "587")
+props.put("mail.smtp.auth", "true")
+props.put("mail.smtp.starttls.enable", "true")
+
+// Set up authentication
+val authenticator = new Authenticator() {
+  override def getPasswordAuthentication(): PasswordAuthentication = {
+    new PasswordAuthentication("username", "password")
+  }
+}
+
+// Set up a session
+val session = Session.getInstance(props, authenticator)
+
+while (result Set.next()) {
+  val id = result Set.getInt("id")
+  val email = result Set.getString("email")
+
+  // Create and send the email
+  val message = new MimeMessage(session)
+  message.setFrom(new InternetAddress("noreply@example.com"))
+  message.setRecipients(javax.mail.Message.RecipientType.TO, email)
+  message.setSubject("Email Verification")
+  message.setText("Please click the following link to verify your email address: http://example.com/verify?id=" + id)
+  Transport.send(message)
+}
+
+result Set.close()
+select Statement.close()
+
+// Close the connection to the database
+conn.close()
